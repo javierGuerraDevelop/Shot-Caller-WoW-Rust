@@ -67,47 +67,22 @@ pub fn identify_class(spell_id: i32) -> Option<PlayerClass> {
         .map(|&(_, class)| class)
 }
 
-pub fn is_ignorable_event(event: &str) -> bool {
+pub fn is_valid_event(event_type: &str) -> bool {
     matches!(
-        event,
-        "RANGE_DAMAGE"
-            | "RANGE_MISSED"
-            | "SPELL_AURA_APPLIED"
-            | "SPELL_AURA_APPLIED_DOSE"
-            | "SPELL_AURA_BROKEN"
-            | "SPELL_AURA_BROKEN_SPELL"
-            | "SPELL_AURA_REFRESH"
-            | "SPELL_AURA_REMOVED"
-            | "SPELL_AURA_REMOVED_DOSE"
-            | "SPELL_CAST_FAILED"
-            | "SPELL_CAST_START"
-            | "SPELL_CREATE"
-            | "SPELL_DAMAGE"
-            | "SPELL_DISPEL_FAILED"
-            | "SPELL_INSTAKILL"
+        event_type,
+        "SPELL_CAST_START"
+            | "SPELL_CAST_SUCCESS"
             | "SPELL_INTERRUPT"
-            | "SPELL_LEECH"
-            | "SPELL_MISSED"
-            | "SPELL_STOLEN"
-            | "SPELL_SUMMON"
-            | "SPELL_EMPOWER_START"
-            | "SPELL_EMPOWER_END"
-            | "SPELL_EMPOWER_INTERRUPT"
-            | "SPELL_PERIODIC_DAMAGE"
-            | "SPELL_PERIODIC_DRAIN"
-            | "SPELL_PERIODIC_ENERGIZE"
-            | "SPELL_PERIODIC_LEECH"
-            | "SPELL_PERIODIC_MISSED"
-            | "SPELL_BUILDING_DAMAGE"
-            | "SPELL_BUILDING_HEAL"
-            | "ENVIRONMENTAL_DAMAGE"
-            | "DAMAGE_SHIELD"
-            | "DAMAGE_SHIELD_MISSED"
-            | "DAMAGE_SPLIT"
-            | "PARTY_KILL"
+            | "SPELL_AURA_APPLIED"
+            | "SPELL_AURA_REMOVED"
+            | "SPELL_AURA_REFRESH"
             | "UNIT_DIED"
             | "UNIT_DESTROYED"
-            | "UNIT_DISSIPATES"
+            | "SPELL_RESURRECT"
+            | "SWING_DAMAGE"
+            | "SPELL_DAMAGE"
+            | "RANGE_DAMAGE"
+            | "SPELL_PERIODIC_DAMAGE"
     )
 }
 
@@ -340,7 +315,7 @@ pub fn get_player_crowd_control_iter(
 
 const BATTLE_REZ_IDS: [i32; 5] = [10609, 376999, 20707, 61999, 407133];
 
-pub fn is_battle_rez_id(spell_id: i32) -> bool {
+pub fn is_battle_rez(spell_id: i32) -> bool {
     BATTLE_REZ_IDS.contains(&spell_id)
 }
 
