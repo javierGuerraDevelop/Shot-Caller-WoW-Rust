@@ -2,8 +2,8 @@ pub struct CombatEvent {
     timestamp: String,
     event_type: String,
     source_name: String,
-    source_id: String,
-    target_id: String,
+    source_guid: String,
+    target_guid: String,
     source_raid_flag: String,
     spell_name: String,
     spell_id: i32,
@@ -14,8 +14,8 @@ impl CombatEvent {
         timestamp: String,
         event_type: String,
         source_name: String,
-        source_id: String,
-        target_id: String,
+        source_guid: String,
+        target_guid: String,
         source_raid_flag: String,
         spell_name: String,
         spell_id: i32,
@@ -24,8 +24,8 @@ impl CombatEvent {
             timestamp,
             event_type,
             source_name,
-            source_id,
-            target_id,
+            source_guid,
+            target_guid,
             source_raid_flag,
             spell_name,
             spell_id,
@@ -37,33 +37,52 @@ pub fn parse_line(line: &str) -> Option<CombatEvent> {
     let mut parts = line.split(',');
 
     let prefix = parts.next()?;
-    let source_guid = parts.next()?;
-    let source_name = parts.next()?;
-    let _source_flags = parts.next()?;
-    let source_raid_flags = parts.next()?;
-    let dest_guid = parts.next()?;
-    let _dest_name = parts.next()?;
-    let _dest_flags = parts.next()?;
-    let _dest_raid_flags = parts.next()?;
-    let spell_id = parts.next()?;
-    let spell_name = parts.next()?;
+    let (timestamp, event_type) = prefix.split_once("  ")?;
+    if timestamp.is_empty() || event_type == "" {
+        return None;
+    }
 
-    println!("prefix: {}", prefix);
-    println!("source_name: {}", source_name);
-    println!("source_guid: {}", source_guid);
-    println!("dest_guid: {}", dest_guid);
-    println!("source_raid_flags: {}", source_raid_flags);
-    println!("spell_name: {}", spell_name);
-    println!("spell_id: {}", spell_id);
+    let source_guid = parts.next()?;
+    if source_guid.is_empty() {
+        return None;
+    }
+
+    let source_name = parts.next()?;
+    if source_name.is_empty() {
+        return None;
+    }
+
+    let _source_flags = parts.next()?;
+
+    let source_raid_flag = parts.next()?;
+    if source_raid_flag.is_empty() {
+        return None;
+    }
+
+    let target_guid = parts.next()?;
+    if target_guid.is_empty() {
+        return None;
+    }
+
+    let _target_name = parts.next()?;
+    let _target_flags = parts.next()?;
+    let _target_raid_flags = parts.next()?;
+
+    let spell_id = parts.next()?.parse::<i32>().ok()?;
+
+    let spell_name = parts.next()?;
+    if spell_name.is_empty() {
+        return None;
+    }
 
     Some(CombatEvent::new(
-        String::from(prefix),
+        String::from(timestamp),
+        String::from(event_type),
         String::from(source_name),
         String::from(source_guid),
-        String::from(dest_guid),
-        String::from(source_raid_flags),
+        String::from(target_guid),
+        String::from(source_raid_flag),
         String::from(spell_name),
-        String::from("1"),
-        spell_id.parse::<i32>().unwrap_or(0),
+        spell_id,
     ))
 }
