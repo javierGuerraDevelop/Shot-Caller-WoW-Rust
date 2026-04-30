@@ -27,7 +27,7 @@ fn main() {
         }
     });
 
-    let shotcall_engine = Engine::new();
+    let mut shotcall_engine = Engine::new();
 
     for line in rx_lines {
         if let Some(event) = parser::parse_line(&line) {

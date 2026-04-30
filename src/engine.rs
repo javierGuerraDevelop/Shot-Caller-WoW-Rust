@@ -44,21 +44,48 @@ impl Engine {
     }
 
     pub fn handle_interrupt(&mut self, event: Event) {
-        if let Event::Interrupt { source_guid, .. } = event {
-            for member in &mut self.party {
-                if let Entity::Player {
-                    guid, interrupt, ..
-                } = member
-                {
-                    if source_guid == guid {
-                        interrupt.is_on_cooldown = true;
-                    }
-                }
+        let Event::Interrupt { source_guid, .. } = event else {
+            return;
+        };
+
+        for member in &mut self.party {
+            #[rustfmt::skip]
+            let Entity::Player {guid, interrupt, ..} = member else {
+                continue;
+            };
+
+            if source_guid == guid {
+                interrupt.is_on_cooldown = true;
+                // future event to take it off cooldown
+                break;
             }
         }
     }
 
-    pub fn handle_crowd_control(&self, event: Event) {}
+    pub fn handle_crowd_control(&mut self, event: Event) {
+        #[rustfmt::skip]
+        let Event::CrowdControl { source_guid, spell_id, .. } = event else {
+            return;
+        };
+
+        for member in &mut self.party {
+            #[rustfmt::skip]
+            let Entity::Player {guid, crowd_control_vec, ..} = member else {
+                continue;
+            };
+
+            if source_guid == guid {
+                for crowd_control in crowd_control_vec {
+                    if crowd_control.spell_id == spell_id {
+                        crowd_control.is_on_cooldown = true;
+                        // future event to take it off cooldown
+                        return;
+                    }
+                }
+                break;
+            }
+        }
+    }
 
     pub fn handle_death(&self, event: Event) {}
 

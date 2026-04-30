@@ -8,6 +8,7 @@ pub enum Event<'a> {
     CrowdControl {
         timestamp: &'a str,
         source_guid: &'a str,
+        spell_id: i32,
     },
     Death {
         timestamp: &'a str,
@@ -69,6 +70,7 @@ pub fn parse_line<'a>(line: &'a str) -> Option<Event<'a>> {
         Some(Event::CrowdControl {
             timestamp,
             source_guid,
+            spell_id,
         })
     } else {
         Some(Event::Other {
