@@ -3,17 +3,23 @@ use std::{cmp::Reverse, collections::BinaryHeap, time::Duration};
 use crate::parser::Event;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum QueueItem {
+    ShotCall { message: String },
+    ToggleOffCooldown { guid: String, spell_id: i32 },
+    EnemyDeath { guid: String },
+    PlayerDeath { guid: String },
+    PlayerResurrection { guid: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Callout {
     timestamp_ms: u64,
-    message: String,
+    item: QueueItem,
 }
 
 impl Callout {
-    pub fn new(timestamp_ms: u64, message: String) -> Callout {
-        Callout {
-            timestamp_ms,
-            message,
-        }
+    pub fn new(timestamp_ms: u64, item: QueueItem) -> Callout {
+        Callout { timestamp_ms, item }
     }
 }
 
@@ -128,7 +134,9 @@ impl Engine {
         while current_cast_time < end_time {
             self.callout_queue.push(std::cmp::Reverse(Callout::new(
                 current_cast_time,
-                format!("Enemy casting {}", ability_name),
+                QueueItem::ShotCall {
+                    message: format!("Enemy casting {}", ability_name),
+                },
             )));
             current_cast_time += recast_delay_ms;
         }
@@ -143,7 +151,24 @@ impl Engine {
         while let Some(std::cmp::Reverse(callout)) = self.callout_queue.peek() {
             if callout.timestamp_ms <= now_ms {
                 let ready_callout = self.callout_queue.pop().unwrap().0;
-                println!("SHOTCALL: {}", ready_callout.message);
+
+                match ready_callout.item {
+                    QueueItem::ShotCall { message } => {
+                        // Send text-to-speech
+                    }
+                    QueueItem::ToggleOffCooldown { guid, spell_id } => {
+                        // use guid to search party and toggle the cooldown for the spell
+                    }
+                    QueueItem::EnemyDeath { guid } => {
+                        // use guid to search enemies and invalidate their shotcalls
+                    }
+                    QueueItem::PlayerDeath { guid } => {
+                        // use guid to search party and toggle death
+                    }
+                    QueueItem::PlayerResurrection { guid } => {
+                        // use guid to search party and toggle death
+                    }
+                }
             } else {
                 break;
             }

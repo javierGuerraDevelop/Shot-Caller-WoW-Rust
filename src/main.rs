@@ -17,6 +17,7 @@ fn main() {
     let (tx_events, rx_events) = mpsc::channel::<Event>();
     let filepath = "testpath.txt";
 
+    /*
     thread::spawn(move || {
         let watcher_result = reader::tail_file(filepath, move |line| {
             let _ = tx_lines.send(line.to_string());
@@ -26,6 +27,7 @@ fn main() {
             eprintln!("Fatal error in watch_file: {}", e);
         }
     });
+    */
 
     let mut shotcall_engine = Engine::new();
 
