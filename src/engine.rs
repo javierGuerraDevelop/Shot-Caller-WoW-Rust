@@ -1,6 +1,21 @@
-use std::time::Duration;
+use std::{cmp::Reverse, collections::BinaryHeap, time::Duration};
 
 use crate::parser::Event;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Callout {
+    timestamp_ms: u64,
+    message: String,
+}
+
+impl Callout {
+    pub fn new(timestamp_ms: u64, message: String) -> Callout {
+        Callout {
+            timestamp_ms,
+            message,
+        }
+    }
+}
 
 pub struct Spell {
     name: String,
@@ -31,6 +46,7 @@ pub struct Engine {
     enemies: Vec<Entity>,
     interrupts: Vec<Spell>,
     crowd_control: Vec<Spell>,
+    callout_queue: BinaryHeap<Reverse<Callout>>,
 }
 
 impl Engine {
@@ -40,6 +56,7 @@ impl Engine {
             enemies: vec![],
             interrupts: vec![],
             crowd_control: vec![],
+            callout_queue: BinaryHeap::new(),
         }
     }
 
@@ -87,13 +104,49 @@ impl Engine {
         }
     }
 
-    pub fn handle_death(&self, event: Event) {}
+    pub fn handle_death(&mut self, event: Event) {}
 
-    pub fn handle_resurrection(&self, event: Event) {}
+    pub fn handle_resurrection(&mut self, event: Event) {}
 
-    pub fn handle_other(&self, event: Event) {}
+    pub fn handle_other(&mut self, event: Event) {}
 
-    pub fn identify_player(&self, event: Event) {}
+    pub fn identify_player(&mut self, event: Event) {}
 
-    pub fn identify_enemy(&self, event: Event) {}
+    pub fn identify_enemy(&mut self, event: Event) {
+        let now_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or(std::time::Duration::default())
+            .as_millis() as u64;
+        let five_minutes_ms = 0;
+        let first_cast_ms = 0;
+        let recast_delay_ms = 0;
+        let ability_name = "Unknown Ability";
+
+        let mut current_cast_time = now_ms + first_cast_ms;
+        let end_time = now_ms + five_minutes_ms;
+
+        while current_cast_time < end_time {
+            self.callout_queue.push(std::cmp::Reverse(Callout::new(
+                current_cast_time,
+                format!("Enemy casting {}", ability_name),
+            )));
+            current_cast_time += recast_delay_ms;
+        }
+    }
+
+    pub fn process_callouts(&mut self) {
+        let now_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or(std::time::Duration::default())
+            .as_millis() as u64;
+
+        while let Some(std::cmp::Reverse(callout)) = self.callout_queue.peek() {
+            if callout.timestamp_ms <= now_ms {
+                let ready_callout = self.callout_queue.pop().unwrap().0;
+                println!("SHOTCALL: {}", ready_callout.message);
+            } else {
+                break;
+            }
+        }
+    }
 }

@@ -29,30 +29,24 @@ fn main() {
 
     let mut shotcall_engine = Engine::new();
 
-    for line in rx_lines {
-        if let Some(event) = parser::parse_line(&line) {
-            match event {
-                Event::Interrupt { .. } => {
-                    shotcall_engine.handle_interrupt(event);
-                }
-                Event::CrowdControl { .. } => {
-                    shotcall_engine.handle_crowd_control(event);
-                }
-                Event::Death { .. } => {
-                    shotcall_engine.handle_death(event);
-                }
-                Event::Resurrection { .. } => {
-                    shotcall_engine.handle_resurrection(event);
-                }
-                Event::Other { .. } => {
-                    shotcall_engine.handle_other(event);
+    let tick_rate = std::time::Duration::from_millis(50);
+    loop {
+        match rx_lines.recv_timeout(tick_rate) {
+            Ok(line) => {
+                if let Some(event) = parser::parse_line(&line) {
+                    match event {
+                        Event::Interrupt { .. } => shotcall_engine.handle_interrupt(event),
+                        Event::CrowdControl { .. } => shotcall_engine.handle_crowd_control(event),
+                        Event::Death { .. } => shotcall_engine.handle_death(event),
+                        Event::Resurrection { .. } => shotcall_engine.handle_resurrection(event),
+                        Event::Other { .. } => shotcall_engine.handle_other(event),
+                    }
                 }
             }
-        };
-    }
-
-    for _event in rx_events {
-        // process event
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+        }
+        shotcall_engine.process_callouts();
     }
 
     let test_line = String::from(
