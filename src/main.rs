@@ -17,7 +17,6 @@ fn main() {
     let (tx_events, rx_events) = mpsc::channel::<Event>();
     let filepath = "testpath.txt";
 
-    /*
     thread::spawn(move || {
         let watcher_result = reader::tail_file(filepath, move |line| {
             let _ = tx_lines.send(line.to_string());
@@ -27,7 +26,6 @@ fn main() {
             eprintln!("Fatal error in watch_file: {}", e);
         }
     });
-    */
 
     let mut shotcall_engine = Engine::new();
 
@@ -37,18 +35,22 @@ fn main() {
             Ok(line) => {
                 if let Some(event) = parser::parse_line(&line) {
                     match event {
-                        Event::Interrupt { .. } => shotcall_engine.handle_interrupt(event),
-                        Event::CrowdControl { .. } => shotcall_engine.handle_crowd_control(event),
-                        Event::Death { .. } => shotcall_engine.handle_death(event),
-                        Event::Resurrection { .. } => shotcall_engine.handle_resurrection(event),
-                        Event::Other { .. } => shotcall_engine.handle_other(event),
+                        Event::Interrupt { .. } => shotcall_engine.handle_interrupt_event(event),
+                        Event::CrowdControl { .. } => {
+                            shotcall_engine.handle_crowd_control_event(event)
+                        }
+                        Event::Death { .. } => shotcall_engine.handle_death_event(event),
+                        Event::Resurrection { .. } => {
+                            shotcall_engine.handle_resurrection_event(event)
+                        }
+                        Event::Other { .. } => shotcall_engine.handle_other_event(event),
                     }
                 }
             }
             Err(mpsc::RecvTimeoutError::Timeout) => {}
             Err(mpsc::RecvTimeoutError::Disconnected) => break,
         }
-        shotcall_engine.process_callouts();
+        shotcall_engine.process_queue();
     }
 
     let test_line = String::from(

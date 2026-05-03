@@ -1,32 +1,31 @@
 use crate::constants;
 
-pub enum Event<'a> {
+pub enum Event {
     Interrupt {
-        timestamp: &'a str,
-        source_guid: &'a str,
+        timestamp: String,
+        source_guid: String,
     },
     CrowdControl {
-        timestamp: &'a str,
-        source_guid: &'a str,
+        timestamp: String,
+        source_guid: String,
         spell_id: i32,
     },
     Death {
-        timestamp: &'a str,
-        target_guid: &'a str,
-        source_raid_flag: &'a str,
+        timestamp: String,
+        target_guid: String,
     },
     Resurrection {
-        timestamp: &'a str,
-        target_guid: &'a str,
+        timestamp: String,
+        target_guid: String,
     },
     Other {
-        timestamp: &'a str,
-        source_guid: &'a str,
-        target_guid: &'a str,
+        timestamp: String,
+        source_guid: String,
+        target_guid: String,
     },
 }
 
-pub fn parse_line<'a>(line: &'a str) -> Option<Event<'a>> {
+pub fn parse_line(line: &str) -> Option<Event> {
     let mut parts = line.split(',');
 
     let prefix = parts.next()?;
@@ -49,34 +48,33 @@ pub fn parse_line<'a>(line: &'a str) -> Option<Event<'a>> {
 
     if event_type == "UNIT_DIED" {
         return Some(Event::Death {
-            timestamp,
-            target_guid,
-            source_raid_flag,
+            timestamp: timestamp.to_string(),
+            target_guid: target_guid.to_string(),
         });
     } else if event_type == "SPELL_RESURRECT" {
         return Some(Event::Resurrection {
-            timestamp,
-            target_guid,
+            timestamp: timestamp.to_string(),
+            target_guid: target_guid.to_string(),
         });
     }
 
     let spell_id = parts.next()?.parse::<i32>().ok()?;
     if constants::is_interrupt(spell_id) {
         Some(Event::Interrupt {
-            timestamp,
-            source_guid,
+            timestamp: timestamp.to_string(),
+            source_guid: source_guid.to_string(),
         })
     } else if constants::is_crowd_control(spell_id) {
         Some(Event::CrowdControl {
-            timestamp,
-            source_guid,
+            timestamp: timestamp.to_string(),
+            source_guid: source_guid.to_string(),
             spell_id,
         })
     } else {
         Some(Event::Other {
-            timestamp,
-            source_guid,
-            target_guid,
+            timestamp: timestamp.to_string(),
+            source_guid: source_guid.to_string(),
+            target_guid: target_guid.to_string(),
         })
     }
 }

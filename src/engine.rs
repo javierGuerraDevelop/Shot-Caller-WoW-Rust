@@ -2,24 +2,37 @@ use std::{cmp::Reverse, collections::BinaryHeap, time::Duration};
 
 use crate::parser::Event;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum QueueItem {
-    ShotCall { message: String },
-    ToggleOffCooldown { guid: String, spell_id: i32 },
-    EnemyDeath { guid: String },
-    PlayerDeath { guid: String },
-    PlayerResurrection { guid: String },
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum QueueAction {
+    ShotCall {
+        timestamp_ms: u64,
+        message: String,
+    },
+    ToggleOffCooldown {
+        timestamp_ms: u64,
+        guid: String,
+        spell_id: i32,
+    },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Callout {
-    timestamp_ms: u64,
-    item: QueueItem,
+impl QueueAction {
+    pub fn timestamp_ms(&self) -> u64 {
+        match self {
+            QueueAction::ShotCall { timestamp_ms, .. } => *timestamp_ms,
+            QueueAction::ToggleOffCooldown { timestamp_ms, .. } => *timestamp_ms,
+        }
+    }
 }
 
-impl Callout {
-    pub fn new(timestamp_ms: u64, item: QueueItem) -> Callout {
-        Callout { timestamp_ms, item }
+impl PartialOrd for QueueAction {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for QueueAction {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.timestamp_ms().cmp(&other.timestamp_ms())
     }
 }
 
@@ -44,6 +57,7 @@ pub enum Entity {
         ability_name: String,
         first_cast: Duration,
         recast_delay: Duration,
+        is_alive: bool,
     },
 }
 
@@ -52,7 +66,7 @@ pub struct Engine {
     enemies: Vec<Entity>,
     interrupts: Vec<Spell>,
     crowd_control: Vec<Spell>,
-    callout_queue: BinaryHeap<Reverse<Callout>>,
+    callout_queue: BinaryHeap<Reverse<QueueAction>>,
 }
 
 impl Engine {
@@ -66,7 +80,7 @@ impl Engine {
         }
     }
 
-    pub fn handle_interrupt(&mut self, event: Event) {
+    pub fn handle_interrupt_event(&mut self, event: Event) {
         let Event::Interrupt { source_guid, .. } = event else {
             return;
         };
@@ -77,15 +91,15 @@ impl Engine {
                 continue;
             };
 
-            if source_guid == guid {
+            if source_guid == *guid {
                 interrupt.is_on_cooldown = true;
-                // future event to take it off cooldown
+                // generate event to take it off cooldown in future
                 break;
             }
         }
     }
 
-    pub fn handle_crowd_control(&mut self, event: Event) {
+    pub fn handle_crowd_control_event(&mut self, event: Event) {
         #[rustfmt::skip]
         let Event::CrowdControl { source_guid, spell_id, .. } = event else {
             return;
@@ -97,11 +111,11 @@ impl Engine {
                 continue;
             };
 
-            if source_guid == guid {
+            if source_guid == *guid {
                 for crowd_control in crowd_control_vec {
                     if crowd_control.spell_id == spell_id {
                         crowd_control.is_on_cooldown = true;
-                        // future event to take it off cooldown
+                        // generate event to take it off cooldown in future
                         return;
                     }
                 }
@@ -110,11 +124,37 @@ impl Engine {
         }
     }
 
-    pub fn handle_death(&mut self, event: Event) {}
+    pub fn handle_death_event(&mut self, event: Event) {
+        match event {
+            Event::Death {
+                timestamp,
+                target_guid,
+            } => {
+                if target_guid.starts_with("Player-") {
+                    for member in &mut self.party {
+                        #[rustfmt::skip]
+                        let Entity::Player { guid, is_alive, .. } = member else {
+                            continue;
+                        };
 
-    pub fn handle_resurrection(&mut self, event: Event) {}
+                        if target_guid == *guid {
+                            *is_alive = false;
+                            break;
+                        }
+                    }
+                } else if target_guid.starts_with("Creature-")
+                    || target_guid.starts_with("Vehicle-")
+                {
+                    // enemy death logic
+                }
+            }
+            _ => return,
+        }
+    }
 
-    pub fn handle_other(&mut self, event: Event) {}
+    pub fn handle_resurrection_event(&mut self, event: Event) {}
+
+    pub fn handle_other_event(&mut self, event: Event) {}
 
     pub fn identify_player(&mut self, event: Event) {}
 
@@ -132,41 +172,31 @@ impl Engine {
         let end_time = now_ms + five_minutes_ms;
 
         while current_cast_time < end_time {
-            self.callout_queue.push(std::cmp::Reverse(Callout::new(
-                current_cast_time,
-                QueueItem::ShotCall {
+            self.callout_queue
+                .push(std::cmp::Reverse(QueueAction::ShotCall {
+                    timestamp_ms: current_cast_time,
                     message: format!("Enemy casting {}", ability_name),
-                },
-            )));
+                }));
             current_cast_time += recast_delay_ms;
         }
     }
 
-    pub fn process_callouts(&mut self) {
+    pub fn process_queue(&mut self) {
         let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or(std::time::Duration::default())
             .as_millis() as u64;
 
-        while let Some(std::cmp::Reverse(callout)) = self.callout_queue.peek() {
-            if callout.timestamp_ms <= now_ms {
-                let ready_callout = self.callout_queue.pop().unwrap().0;
+        while let Some(std::cmp::Reverse(action)) = self.callout_queue.peek() {
+            if action.timestamp_ms() <= now_ms {
+                let ready_action = self.callout_queue.pop().unwrap().0;
 
-                match ready_callout.item {
-                    QueueItem::ShotCall { message } => {
+                match ready_action {
+                    QueueAction::ShotCall { message, .. } => {
                         // Send text-to-speech
                     }
-                    QueueItem::ToggleOffCooldown { guid, spell_id } => {
+                    QueueAction::ToggleOffCooldown { guid, spell_id, .. } => {
                         // use guid to search party and toggle the cooldown for the spell
-                    }
-                    QueueItem::EnemyDeath { guid } => {
-                        // use guid to search enemies and invalidate their shotcalls
-                    }
-                    QueueItem::PlayerDeath { guid } => {
-                        // use guid to search party and toggle death
-                    }
-                    QueueItem::PlayerResurrection { guid } => {
-                        // use guid to search party and toggle death
                     }
                 }
             } else {
