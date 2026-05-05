@@ -125,6 +125,7 @@ impl Engine {
                     source_guid,
                     interrupt.spell_id,
                 );
+                self.callout_queue.push(Reverse(action));
                 break;
             }
         }
@@ -132,7 +133,7 @@ impl Engine {
 
     pub fn handle_crowd_control_event(&mut self, event: Event) {
         #[rustfmt::skip]
-        let Event::CrowdControl { source_guid, spell_id, .. } = event else {
+        let Event::CrowdControl { timestamp_ms, source_guid, spell_id } = event else {
             return;
         };
 
@@ -146,8 +147,13 @@ impl Engine {
                 for crowd_control in crowd_control_vec {
                     if crowd_control.spell_id == spell_id {
                         crowd_control.is_on_cooldown = true;
-                        // generate event to take it off cooldown in future
-                        return;
+                        let action = QueueAction::new_toggle_off_cooldown(
+                            timestamp_ms,
+                            source_guid,
+                            crowd_control.spell_id,
+                        );
+                        self.callout_queue.push(Reverse(action));
+                        break;
                     }
                 }
                 break;
