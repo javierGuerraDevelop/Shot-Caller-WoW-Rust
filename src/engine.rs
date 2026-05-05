@@ -16,6 +16,21 @@ pub enum QueueAction {
 }
 
 impl QueueAction {
+    pub fn new_shot_call(timestamp_ms: u64, message: String) -> QueueAction {
+        QueueAction::ShotCall {
+            timestamp_ms,
+            message,
+        }
+    }
+
+    pub fn new_toggle_off_cooldown(timestamp_ms: u64, guid: String, spell_id: i32) -> QueueAction {
+        QueueAction::ToggleOffCooldown {
+            timestamp_ms,
+            guid,
+            spell_id,
+        }
+    }
+
     pub fn timestamp_ms(&self) -> u64 {
         match self {
             QueueAction::ShotCall { timestamp_ms, .. } => *timestamp_ms,
@@ -67,6 +82,7 @@ pub struct Engine {
     interrupts: Vec<Spell>,
     crowd_control: Vec<Spell>,
     callout_queue: BinaryHeap<Reverse<QueueAction>>,
+    current_time_ms: u64,
 }
 
 impl Engine {
@@ -77,11 +93,22 @@ impl Engine {
             interrupts: vec![],
             crowd_control: vec![],
             callout_queue: BinaryHeap::new(),
+            current_time_ms: 0,
+        }
+    }
+
+    pub fn set_current_time(&mut self, timestamp_ms: u64) {
+        if timestamp_ms > self.current_time_ms {
+            self.current_time_ms = timestamp_ms;
         }
     }
 
     pub fn handle_interrupt_event(&mut self, event: Event) {
-        let Event::Interrupt { source_guid, .. } = event else {
+        let Event::Interrupt {
+            timestamp_ms,
+            source_guid,
+        } = event
+        else {
             return;
         };
 
@@ -93,7 +120,11 @@ impl Engine {
 
             if source_guid == *guid {
                 interrupt.is_on_cooldown = true;
-                // generate event to take it off cooldown in future
+                let action = QueueAction::new_toggle_off_cooldown(
+                    timestamp_ms,
+                    source_guid,
+                    interrupt.spell_id,
+                );
                 break;
             }
         }
@@ -127,7 +158,7 @@ impl Engine {
     pub fn handle_death_event(&mut self, event: Event) {
         match event {
             Event::Death {
-                timestamp,
+                timestamp_ms: _,
                 target_guid,
             } => {
                 if target_guid.starts_with("Player-") {
@@ -159,10 +190,7 @@ impl Engine {
     pub fn identify_player(&mut self, event: Event) {}
 
     pub fn identify_enemy(&mut self, event: Event) {
-        let now_ms = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(std::time::Duration::default())
-            .as_millis() as u64;
+        let now_ms = self.current_time_ms;
         let five_minutes_ms = 0;
         let first_cast_ms = 0;
         let recast_delay_ms = 0;
@@ -182,10 +210,7 @@ impl Engine {
     }
 
     pub fn process_queue(&mut self) {
-        let now_ms = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or(std::time::Duration::default())
-            .as_millis() as u64;
+        let now_ms = self.current_time_ms;
 
         while let Some(std::cmp::Reverse(action)) = self.callout_queue.peek() {
             if action.timestamp_ms() <= now_ms {
