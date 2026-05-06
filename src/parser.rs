@@ -26,6 +26,18 @@ pub enum Event {
     },
 }
 
+impl Event {
+    pub fn timestamp_ms(&self) -> u64 {
+        match self {
+            Event::Interrupt { timestamp_ms, .. } => *timestamp_ms,
+            Event::CrowdControl { timestamp_ms, .. } => *timestamp_ms,
+            Event::Death { timestamp_ms, .. } => *timestamp_ms,
+            Event::Resurrection { timestamp_ms, .. } => *timestamp_ms,
+            Event::Other { timestamp_ms, .. } => *timestamp_ms,
+        }
+    }
+}
+
 fn parse_timestamp(ts: &str) -> u64 {
     let ts = ts.split('-').next().unwrap_or(ts).trim();
     if let Ok(dt) = NaiveDateTime::parse_from_str(ts, "%m/%d/%Y %H:%M:%S%.f") {

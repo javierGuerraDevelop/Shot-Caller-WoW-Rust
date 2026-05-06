@@ -54,7 +54,7 @@ impl Ord for QueueAction {
 pub struct Spell {
     name: String,
     spell_id: i32,
-    cooldown: Duration,
+    cooldown: u64,
     is_on_cooldown: bool,
 }
 
@@ -70,8 +70,8 @@ pub enum Entity {
         name: String,
         guid: String,
         ability_name: String,
-        first_cast: Duration,
-        recast_delay: Duration,
+        first_cast: u64,
+        recast_delay: u64,
         is_alive: bool,
     },
 }
@@ -163,17 +163,13 @@ impl Engine {
 
     pub fn handle_death_event(&mut self, event: Event) {
         match event {
-            Event::Death {
-                timestamp_ms: _,
-                target_guid,
-            } => {
+            Event::Death { target_guid, .. } => {
                 if target_guid.starts_with("Player-") {
                     for member in &mut self.party {
                         #[rustfmt::skip]
-                        let Entity::Player { guid, is_alive, .. } = member else {
+                        let Entity::Player { is_alive, guid, .. } = member else {
                             continue;
                         };
-
                         if target_guid == *guid {
                             *is_alive = false;
                             break;
@@ -182,28 +178,87 @@ impl Engine {
                 } else if target_guid.starts_with("Creature-")
                     || target_guid.starts_with("Vehicle-")
                 {
-                    // enemy death logic
+                    for enemy in &mut self.enemies {
+                        let Entity::Enemy { is_alive, guid, .. } = enemy else {
+                            continue;
+                        };
+                        if target_guid == *guid {
+                            *is_alive = false;
+                            break;
+                        }
+                    }
                 }
             }
             _ => return,
         }
     }
 
-    pub fn handle_resurrection_event(&mut self, event: Event) {}
+    pub fn handle_resurrection_event(&mut self, event: Event) {
+        match event {
+            Event::Resurrection { target_guid, .. } => {
+                for member in &mut self.party {
+                    #[rustfmt::skip]
+                    let Entity::Player { is_alive, guid, .. } = member else {
+                        continue;
+                    };
+                    if target_guid == *guid {
+                        *is_alive = true;
+                        break;
+                    }
+                }
+            }
+            _ => return,
+        };
+    }
 
-    pub fn handle_other_event(&mut self, event: Event) {}
+    pub fn handle_other_event(&mut self, event: Event) {
+        match &event {
+            Event::Other { target_guid, .. } => {
+                if target_guid.starts_with("Creature-") || target_guid.starts_with("Vehicle-") {
+                    self.identify_enemy(event);
+                } else if target_guid.starts_with("Player-") {
+                    self.identify_player(event);
+                }
+            }
+            _ => return,
+        }
+    }
 
     pub fn identify_player(&mut self, event: Event) {}
 
     pub fn identify_enemy(&mut self, event: Event) {
+        let Event::Other { source_guid, .. } = event else {
+            return;
+        };
+        let Some(enemy) = self
+            .enemies
+            .iter()
+            .find(|e| matches!(e, Entity::Enemy { guid, .. } if guid == &source_guid))
+        else {
+            return;
+        };
+
+        let Entity::Enemy {
+            first_cast,
+            recast_delay,
+            ability_name,
+            ..
+        } = enemy
+        else {
+            return;
+        };
+
         let now_ms = self.current_time_ms;
-        let five_minutes_ms = 0;
-        let first_cast_ms = 0;
-        let recast_delay_ms = 0;
-        let ability_name = "Unknown Ability";
+        let five_minutes_ms = 5 * 60 * 1000;
+        let first_cast_ms = *first_cast;
+        let recast_delay_ms = *recast_delay;
 
         let mut current_cast_time = now_ms + first_cast_ms;
         let end_time = now_ms + five_minutes_ms;
+
+        if recast_delay_ms == 0 {
+            return;
+        }
 
         while current_cast_time < end_time {
             self.callout_queue

@@ -34,6 +34,7 @@ fn main() {
         match rx_lines.recv_timeout(tick_rate) {
             Ok(line) => {
                 if let Some(event) = parser::parse_line(&line) {
+                    shotcall_engine.set_current_time(event.timestamp_ms());
                     match event {
                         Event::Interrupt { .. } => shotcall_engine.handle_interrupt_event(event),
                         Event::CrowdControl { .. } => {
