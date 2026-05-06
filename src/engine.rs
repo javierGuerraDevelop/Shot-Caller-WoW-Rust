@@ -1,6 +1,6 @@
 use std::{cmp::Reverse, collections::BinaryHeap, time::Duration};
 
-use crate::parser::Event;
+use crate::{constants, parser::Event};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum QueueAction {
@@ -58,6 +58,17 @@ pub struct Spell {
     is_on_cooldown: bool,
 }
 
+impl Spell {
+    pub fn new(name: String, spell_id: i32, cooldown: u64) -> Spell {
+        Spell {
+            name,
+            spell_id,
+            cooldown,
+            is_on_cooldown: false,
+        }
+    }
+}
+
 pub enum Entity {
     Player {
         name: String,
@@ -74,6 +85,40 @@ pub enum Entity {
         recast_delay: u64,
         is_alive: bool,
     },
+}
+
+impl Entity {
+    pub fn new_player(
+        name: String,
+        guid: String,
+        interrupt: Spell,
+        crowd_control_vec: Vec<Spell>,
+    ) -> Entity {
+        Entity::Player {
+            name,
+            guid,
+            interrupt,
+            crowd_control_vec,
+            is_alive: true,
+        }
+    }
+
+    pub fn new_enemy(
+        name: String,
+        guid: String,
+        ability_name: String,
+        first_cast: u64,
+        recast_delay: u64,
+    ) -> Entity {
+        Entity::Enemy {
+            name,
+            guid,
+            ability_name,
+            first_cast,
+            recast_delay,
+            is_alive: true,
+        }
+    }
 }
 
 pub struct Engine {
@@ -224,7 +269,45 @@ impl Engine {
         }
     }
 
-    pub fn identify_player(&mut self, event: Event) {}
+    pub fn identify_player(&mut self, event: Event) {
+        match event {
+            Event::Other {
+                source_guid,
+                spell_id,
+                ..
+            } => {
+                let Some(_) = self
+                    .party
+                    .iter()
+                    .find(|e| matches!(e, Entity::Player { guid, .. } if guid == &source_guid))
+                else {
+                    let identify_class: Option<constants::PlayerClass> =
+                        constants::get_class_from_identifying_spell(spell_id);
+                    // let new_player = Entity::new_player(String::from("name"), String::from(source_guid));
+                    match identify_class {
+                        Some(player_class) => match player_class {
+                            constants::PlayerClass::DeathKnight { .. } => {}
+                            constants::PlayerClass::DemonHunter { .. } => {}
+                            constants::PlayerClass::Druid { .. } => {}
+                            constants::PlayerClass::Evoker { .. } => {}
+                            constants::PlayerClass::Hunter { .. } => {}
+                            constants::PlayerClass::Mage { .. } => {}
+                            constants::PlayerClass::Monk { .. } => {}
+                            constants::PlayerClass::Paladin { .. } => {}
+                            constants::PlayerClass::Rogue { .. } => {}
+                            constants::PlayerClass::Shaman { .. } => {}
+                            constants::PlayerClass::Warlock { .. } => {}
+                            constants::PlayerClass::Warrior { .. } => {}
+                            _ => {}
+                        },
+                        None => {}
+                    }
+                    return;
+                };
+            }
+            _ => return,
+        }
+    }
 
     pub fn identify_enemy(&mut self, event: Event) {
         let Event::Other { source_guid, .. } = event else {

@@ -1,5 +1,7 @@
 use core::time::Duration;
 
+use crate::engine;
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum PlayerClass {
     DeathKnight,
@@ -15,6 +17,116 @@ pub enum PlayerClass {
     Shaman,
     Warlock,
     Warrior,
+}
+
+impl PlayerClass {
+    pub fn get_interrupt(&self) -> engine::Spell {
+        match self {
+            Self::DeathKnight => engine::Spell::new(String::from("Mind Freeze"), 47528, 15000),
+            Self::DemonHunter => engine::Spell::new(String::from("Disrupt"), 183752, 15000),
+            Self::Druid => engine::Spell::new(String::from("Skull Bash"), 106839, 15000),
+            Self::Evoker => engine::Spell::new(String::from("Quell"), 351338, 20000),
+            Self::Hunter => engine::Spell::new(String::from("Muzzle"), 187707, 15000),
+            Self::Mage => engine::Spell::new(String::from("Counterspell"), 2139, 24000),
+            Self::Monk => engine::Spell::new(String::from("Spear Hand Strike"), 116705, 15000),
+            Self::Paladin => engine::Spell::new(String::from("Rebuke"), 96231, 15000),
+            Self::Priest => engine::Spell::new(String::from("Silence"), 15487, 45000),
+            Self::Rogue => engine::Spell::new(String::from("Kick"), 1766, 15000),
+            Self::Shaman => engine::Spell::new(String::from("Wind Shear"), 57994, 12000),
+            Self::Warlock => engine::Spell::new(String::from("Spell Lock"), 19647, 24000),
+            Self::Warrior => engine::Spell::new(String::from("Pummel"), 6552, 15000),
+        }
+    }
+
+    pub fn get_crowd_control(&self) -> Vec<engine::Spell> {
+        match self {
+            Self::DeathKnight => {
+                vec![
+                    engine::Spell::new(String::from("Blinding Sleet"), 207127, 60000),
+                    engine::Spell::new(String::from("Gorefiend's Grasp"), 207167, 90000),
+                ]
+            }
+            Self::DemonHunter => {
+                vec![engine::Spell::new(
+                    String::from("Chaos Nova"),
+                    179057,
+                    60000,
+                )]
+            }
+            Self::Druid => {
+                vec![
+                    engine::Spell::new(String::from("Ursol's Vortex"), 102793, 60000),
+                    engine::Spell::new(String::from("Typhoon"), 132469, 30000),
+                ]
+            }
+            Self::Evoker => {
+                vec![engine::Spell::new(
+                    String::from("Tail Swipe"),
+                    368725,
+                    90000,
+                )]
+            }
+            Self::Hunter => {
+                vec![engine::Spell::new(
+                    String::from("Binding Shot"),
+                    109248,
+                    45000,
+                )]
+            }
+            Self::Mage => {
+                vec![
+                    engine::Spell::new(String::from("Frost Nova"), 122, 30000),
+                    engine::Spell::new(String::from("Dragon's Breath"), 31661, 45000),
+                    engine::Spell::new(String::from("Ring of Frost"), 113724, 45000),
+                    engine::Spell::new(String::from("Blast Wave"), 157981, 30000),
+                ]
+            }
+            Self::Monk => {
+                vec![
+                    engine::Spell::new(String::from("Leg Sweep"), 119381, 60000),
+                    engine::Spell::new(String::from("Ring of Peace"), 116844, 60000),
+                ]
+            }
+            Self::Paladin => {
+                vec![engine::Spell::new(
+                    String::from("Blinding Light"),
+                    105421,
+                    90000,
+                )]
+            }
+            Self::Priest => {
+                vec![engine::Spell::new(
+                    String::from("Psychic Scream"),
+                    8122,
+                    60000,
+                )]
+            }
+            Self::Rogue => {
+                // No Rogue spells were listed in the provided CROWD_CONTROL_DATA
+                vec![]
+            }
+            Self::Shaman => {
+                vec![
+                    engine::Spell::new(String::from("Capacitor Totem"), 192058, 60000),
+                    engine::Spell::new(String::from("Earthgrab Totem"), 51485, 30000),
+                    engine::Spell::new(String::from("Thunderstorm"), 51490, 45000),
+                    engine::Spell::new(String::from("Sundering"), 197214, 40000),
+                ]
+            }
+            Self::Warlock => {
+                vec![
+                    engine::Spell::new(String::from("Howl of Terror"), 5484, 45000),
+                    engine::Spell::new(String::from("Shadowfury"), 30283, 60000),
+                ]
+            }
+            Self::Warrior => {
+                vec![
+                    engine::Spell::new(String::from("Intimidating Shout"), 5246, 90000),
+                    engine::Spell::new(String::from("Shockwave"), 46968, 40000),
+                ]
+            }
+        }
+    }
 }
 
 const IDENTIFYING_SPELLS: [(i32, PlayerClass); 27] = [
@@ -60,7 +172,7 @@ const IDENTIFYING_SPELLS: [(i32, PlayerClass); 27] = [
     (6544, PlayerClass::Warrior), // Heroic Leap
 ];
 
-pub fn identify_class(spell_id: i32) -> Option<PlayerClass> {
+pub fn get_class_from_identifying_spell(spell_id: i32) -> Option<PlayerClass> {
     IDENTIFYING_SPELLS
         .iter()
         .find(|&&(id, _)| id == spell_id)
@@ -86,237 +198,73 @@ pub fn is_valid_event(event_type: &str) -> bool {
     )
 }
 
-const INTERRUPT_DATA: [(PlayerClass, i32, Duration); 14] = [
-    (PlayerClass::DeathKnight, 47528, Duration::from_secs(15)), // Mind Freeze
-    (PlayerClass::DemonHunter, 183752, Duration::from_secs(15)), // Disrupt
-    (PlayerClass::Druid, 106839, Duration::from_secs(15)),      // Skull Bash (Main kick)
-    (PlayerClass::Druid, 78675, Duration::from_secs(60)),       // Druid (Moonkin)
-    (PlayerClass::Evoker, 351338, Duration::from_secs(20)),     // Quell
-    (PlayerClass::Hunter, 187707, Duration::from_secs(15)),     // Muzzle
-    (PlayerClass::Mage, 2139, Duration::from_secs(24)),         // Counterspell
-    (PlayerClass::Monk, 116705, Duration::from_secs(15)),       // Spear Hand Strike
-    (PlayerClass::Paladin, 96231, Duration::from_secs(15)),     // Rebuke
-    (PlayerClass::Priest, 15487, Duration::from_secs(45)),      // Silence
-    (PlayerClass::Rogue, 1766, Duration::from_secs(15)),        // Kick
-    (PlayerClass::Shaman, 57994, Duration::from_secs(12)),      // Wind Shear
-    (PlayerClass::Warlock, 19647, Duration::from_secs(24)),     // Spell Lock (Pet)
-    (PlayerClass::Warrior, 6552, Duration::from_secs(15)),      // Pummel
-];
-
 pub fn is_interrupt(spell_id: i32) -> bool {
-    INTERRUPT_DATA.iter().any(|&(_, id, _)| id == spell_id)
-}
+    let interrupts = [
+        47528,  // Mind Freeze
+        183752, // Disrupt
+        106839, // Skull Bash
+        78675,  // Solar Beam (Moonkin)
+        351338, // Quell
+        187707, // Muzzle
+        2139,   // Counterspell
+        116705, // Spear Hand Strike
+        96231,  // Rebuke
+        15487,  // Silence
+        1766,   // Kick
+        57994,  // Wind Shear
+        19647,  // Spell Lock
+        6552,   // Pummel
+    ];
 
-pub fn get_interrupt_id(event_class: PlayerClass) -> Option<i32> {
-    INTERRUPT_DATA
-        .iter()
-        .find(|&&(player_class, _, _)| player_class == event_class)
-        .map(|&(_, id, _)| id)
+    interrupts.contains(&spell_id)
 }
-
-pub fn get_interrupt_cd(event_class: PlayerClass) -> Option<Duration> {
-    INTERRUPT_DATA
-        .iter()
-        .find(|&&(player_class, _, _)| player_class == event_class)
-        .map(|&(_, _, duration)| duration)
-}
-
-const CROWD_CONTROL_DATA: [(PlayerClass, &str, i32, Duration); 29] = [
-    (
-        PlayerClass::DeathKnight,
-        "Blinding Sleet",
-        207127,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::DeathKnight,
-        "Gorefiend's Grasp",
-        207167,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::DemonHunter,
-        "Chaos Nova",
-        179057,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::DemonHunter,
-        "Sigil of Silence",
-        202138,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::DemonHunter,
-        "Sigil of Misery",
-        207684,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::DemonHunter,
-        "Sigil of Chains",
-        204598,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::Druid,
-        "Mass Entanglement",
-        102359,
-        Duration::from_secs(30),
-    ),
-    (
-        PlayerClass::Druid,
-        "Ursol's Vortex",
-        102793,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::Druid,
-        "Typhoon",
-        132469,
-        Duration::from_secs(30),
-    ),
-    (
-        PlayerClass::Evoker,
-        "Landslide",
-        371900,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::Evoker,
-        "Deep Breath",
-        358269,
-        Duration::from_secs(120),
-    ),
-    (
-        PlayerClass::Evoker,
-        "Tail Swipe",
-        368725,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::Hunter,
-        "Binding Shot",
-        109248,
-        Duration::from_secs(45),
-    ),
-    (
-        PlayerClass::Mage,
-        "Frost Nova",
-        122,
-        Duration::from_secs(30),
-    ),
-    (
-        PlayerClass::Mage,
-        "Dragon's Breath",
-        31661,
-        Duration::from_secs(45),
-    ),
-    (
-        PlayerClass::Mage,
-        "Ring of Frost",
-        113724,
-        Duration::from_secs(45),
-    ),
-    (
-        PlayerClass::Mage,
-        "Blast Wave",
-        157981,
-        Duration::from_secs(30),
-    ),
-    (
-        PlayerClass::Monk,
-        "Leg Sweep",
-        119381,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::Monk,
-        "Ring of Peace",
-        116844,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::Paladin,
-        "Blinding Light",
-        105421,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::Priest,
-        "Psychic Scream",
-        8122,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::Shaman,
-        "Capacitor Totem",
-        192058,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::Shaman,
-        "Earthgrab Totem",
-        51485,
-        Duration::from_secs(30),
-    ),
-    (
-        PlayerClass::Shaman,
-        "Thunderstorm",
-        51490,
-        Duration::from_secs(45),
-    ),
-    (
-        PlayerClass::Shaman,
-        "Sundering",
-        197214,
-        Duration::from_secs(40),
-    ),
-    (
-        PlayerClass::Warlock,
-        "Howl of Terror",
-        5484,
-        Duration::from_secs(45),
-    ),
-    (
-        PlayerClass::Warlock,
-        "Shadowfury",
-        30283,
-        Duration::from_secs(60),
-    ),
-    (
-        PlayerClass::Warrior,
-        "Intimidating Shout",
-        5246,
-        Duration::from_secs(90),
-    ),
-    (
-        PlayerClass::Warrior,
-        "Shockwave",
-        46968,
-        Duration::from_secs(40),
-    ),
-];
 
 pub fn is_crowd_control(spell_id: i32) -> bool {
-    CROWD_CONTROL_DATA
-        .iter()
-        .any(|&(_, _, cc_id, _)| spell_id == cc_id)
-}
+    let crowd_controls = [
+        207127, // Blinding Sleet
+        207167, // Gorefiend's Grasp
+        179057, // Chaos Nova
+        202138, // Sigil of Silence
+        207684, // Sigil of Misery
+        204598, // Sigil of Chains
+        102359, // Mass Entanglement
+        102793, // Ursol's Vortex
+        132469, // Typhoon
+        371900, // Landslide
+        358269, // Deep Breath
+        368725, // Tail Swipe
+        109248, // Binding Shot
+        122,    // Frost Nova
+        31661,  // Dragon's Breath
+        113724, // Ring of Frost
+        157981, // Blast Wave
+        119381, // Leg Sweep
+        116844, // Ring of Peace
+        105421, // Blinding Light
+        8122,   // Psychic Scream
+        192058, // Capacitor Totem
+        51485,  // Earthgrab Totem
+        51490,  // Thunderstorm
+        197214, // Sundering
+        5484,   // Howl of Terror
+        30283,  // Shadowfury
+        5246,   // Intimidating Shout
+        46968,  // Shockwave
+    ];
 
-pub fn get_player_crowd_control_iter(
-    event_class: PlayerClass,
-) -> impl Iterator<Item = (&'static str, i32, Duration)> {
-    CROWD_CONTROL_DATA
-        .iter()
-        .filter(move |&&(player_class, _, _, _)| player_class == event_class)
-        .map(|&(_, spell_name, spell_id, spell_duration)| (spell_name, spell_id, spell_duration))
+    crowd_controls.contains(&spell_id)
 }
-
-const BATTLE_REZ_IDS: [i32; 5] = [10609, 376999, 20707, 61999, 407133];
 
 pub fn is_battle_rez(spell_id: i32) -> bool {
-    BATTLE_REZ_IDS.contains(&spell_id)
+    let battle_rez_arr = [
+        10609,  // Rebirth (Druid)
+        376999, // Interpose / Rebirth (Evoker)
+        20707,  // Soulstone (Warlock)
+        61999,  // Raise Allied Dead (Death Knight)
+        407133, // Abyssal Gaze (Paladin - Intercession)
+    ];
+
+    battle_rez_arr.contains(&spell_id)
 }
 
 struct EnemySpellEntry {

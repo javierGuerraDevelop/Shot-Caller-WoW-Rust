@@ -23,6 +23,7 @@ pub enum Event {
         timestamp_ms: u64,
         source_guid: String,
         target_guid: String,
+        spell_id: i32,
     },
 }
 
@@ -99,6 +100,7 @@ pub fn parse_line(line: &str) -> Option<Event> {
             timestamp_ms,
             source_guid: source_guid.to_string(),
             target_guid: target_guid.to_string(),
+            spell_id,
         })
     }
 }
