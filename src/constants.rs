@@ -1,5 +1,3 @@
-use core::time::Duration;
-
 use crate::engine;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -102,7 +100,6 @@ impl PlayerClass {
                 )]
             }
             Self::Rogue => {
-                // No Rogue spells were listed in the provided CROWD_CONTROL_DATA
                 vec![]
             }
             Self::Shaman => {

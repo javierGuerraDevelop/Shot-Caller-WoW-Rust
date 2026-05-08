@@ -1,4 +1,4 @@
-use std::{cmp::Reverse, collections::BinaryHeap, time::Duration};
+use std::{cmp::Reverse, collections::BinaryHeap};
 
 use crate::{constants, parser::Event};
 
@@ -158,15 +158,17 @@ impl Engine {
         };
 
         for member in &mut self.party {
-            #[rustfmt::skip]
-            let Entity::Player {guid, interrupt, ..} = member else {
+            let Entity::Player {
+                guid, interrupt, ..
+            } = member
+            else {
                 continue;
             };
 
             if source_guid == *guid {
                 interrupt.is_on_cooldown = true;
                 let action = QueueAction::new_toggle_off_cooldown(
-                    timestamp_ms,
+                    timestamp_ms + interrupt.cooldown,
                     source_guid,
                     interrupt.spell_id,
                 );
@@ -193,7 +195,7 @@ impl Engine {
                     if crowd_control.spell_id == spell_id {
                         crowd_control.is_on_cooldown = true;
                         let action = QueueAction::new_toggle_off_cooldown(
-                            timestamp_ms,
+                            timestamp_ms + crowd_control.cooldown,
                             source_guid,
                             crowd_control.spell_id,
                         );
