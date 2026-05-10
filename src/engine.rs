@@ -51,22 +51,23 @@ impl Ord for QueueAction {
     }
 }
 
-pub struct Spell {
-    name: String,
-    spell_id: i32,
-    cooldown: u64,
-    is_on_cooldown: bool,
-}
-
-impl Spell {
-    pub fn new(name: String, spell_id: i32, cooldown: u64) -> Spell {
-        Spell {
-            name,
-            spell_id,
-            cooldown,
-            is_on_cooldown: false,
-        }
-    }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Spell {
+    Player {
+        name: String,
+        spell_id: i32,
+        cooldown: u64,
+        is_on_cooldown: bool,
+    },
+    Enemy {
+        enemy_id: u32,
+        spell_id: i32,
+        first_cast_ms: i64,
+        cooldown_ms: i64,
+        callout: &'static str,
+        is_interruptable: bool,
+        is_ccable: bool,
+    },
 }
 
 pub enum Entity {
@@ -158,21 +159,26 @@ impl Engine {
         };
 
         for member in &mut self.party {
-            let Entity::Player {
-                guid, interrupt, ..
-            } = member
-            else {
+            #[rustfmt::skip]
+            let Entity::Player {guid, interrupt, ..} = member else {
                 continue;
             };
 
             if source_guid == *guid {
-                interrupt.is_on_cooldown = true;
-                let action = QueueAction::new_toggle_off_cooldown(
-                    timestamp_ms + interrupt.cooldown,
-                    source_guid,
-                    interrupt.spell_id,
-                );
-                self.callout_queue.push(Reverse(action));
+                if let Spell::Player {
+                    is_on_cooldown,
+                    spell_id,
+                    ..
+                } = interrupt
+                {
+                    *is_on_cooldown = true;
+                    let action = QueueAction::new_toggle_off_cooldown(
+                        timestamp_ms,
+                        source_guid.clone(),
+                        *spell_id,
+                    );
+                    self.callout_queue.push(Reverse(action));
+                }
                 break;
             }
         }
@@ -192,15 +198,23 @@ impl Engine {
 
             if source_guid == *guid {
                 for crowd_control in crowd_control_vec {
-                    if crowd_control.spell_id == spell_id {
-                        crowd_control.is_on_cooldown = true;
-                        let action = QueueAction::new_toggle_off_cooldown(
-                            timestamp_ms + crowd_control.cooldown,
-                            source_guid,
-                            crowd_control.spell_id,
-                        );
-                        self.callout_queue.push(Reverse(action));
-                        break;
+                    if let Spell::Player {
+                        spell_id: cc_spell_id,
+                        is_on_cooldown,
+                        cooldown,
+                        ..
+                    } = crowd_control
+                    {
+                        if *cc_spell_id == spell_id {
+                            *is_on_cooldown = true;
+                            let action = QueueAction::new_toggle_off_cooldown(
+                                timestamp_ms + *cooldown,
+                                source_guid.clone(),
+                                *cc_spell_id,
+                            );
+                            self.callout_queue.push(Reverse(action));
+                            break;
+                        }
                     }
                 }
                 break;
@@ -260,10 +274,10 @@ impl Engine {
 
     pub fn handle_other_event(&mut self, event: Event) {
         match &event {
-            Event::Other { target_guid, .. } => {
-                if target_guid.starts_with("Creature-") || target_guid.starts_with("Vehicle-") {
+            Event::Other { source_guid, .. } => {
+                if source_guid.starts_with("Creature-") || source_guid.starts_with("Vehicle-") {
                     self.identify_enemy(event);
-                } else if target_guid.starts_with("Player-") {
+                } else if source_guid.starts_with("Player-") {
                     self.identify_player(event);
                 }
             }
@@ -275,6 +289,7 @@ impl Engine {
         match event {
             Event::Other {
                 source_guid,
+                source_name,
                 spell_id,
                 ..
             } => {
@@ -285,25 +300,20 @@ impl Engine {
                 else {
                     let identify_class: Option<constants::PlayerClass> =
                         constants::get_class_from_identifying_spell(spell_id);
-                    // let new_player = Entity::new_player(String::from("name"), String::from(source_guid));
-                    match identify_class {
-                        Some(player_class) => match player_class {
-                            constants::PlayerClass::DeathKnight { .. } => {}
-                            constants::PlayerClass::DemonHunter { .. } => {}
-                            constants::PlayerClass::Druid { .. } => {}
-                            constants::PlayerClass::Evoker { .. } => {}
-                            constants::PlayerClass::Hunter { .. } => {}
-                            constants::PlayerClass::Mage { .. } => {}
-                            constants::PlayerClass::Monk { .. } => {}
-                            constants::PlayerClass::Paladin { .. } => {}
-                            constants::PlayerClass::Rogue { .. } => {}
-                            constants::PlayerClass::Shaman { .. } => {}
-                            constants::PlayerClass::Warlock { .. } => {}
-                            constants::PlayerClass::Warrior { .. } => {}
-                            _ => {}
-                        },
-                        None => {}
-                    }
+                    let player = match identify_class {
+                        Some(player_class) => {
+                            let interrupt = player_class.get_interrupt();
+                            let crowd_control = player_class.get_crowd_control();
+                            Entity::new_player(
+                                String::from(source_name),
+                                String::from(source_guid),
+                                interrupt,
+                                crowd_control,
+                            )
+                        }
+                        None => return,
+                    };
+                    self.party.push(player);
                     return;
                 };
             }
@@ -315,28 +325,20 @@ impl Engine {
         let Event::Other { source_guid, .. } = event else {
             return;
         };
-        let Some(enemy) = self
+
+        if self
             .enemies
             .iter()
-            .find(|e| matches!(e, Entity::Enemy { guid, .. } if guid == &source_guid))
-        else {
+            .any(|e| matches!(e, Entity::Enemy { guid, .. } if guid == &source_guid))
+        {
             return;
-        };
-
-        let Entity::Enemy {
-            first_cast,
-            recast_delay,
-            ability_name,
-            ..
-        } = enemy
-        else {
-            return;
-        };
+        }
 
         let now_ms = self.current_time_ms;
         let five_minutes_ms = 5 * 60 * 1000;
-        let first_cast_ms = *first_cast;
-        let recast_delay_ms = *recast_delay;
+        let first_cast_ms = 0; // Replace with actual value from enemy
+        let recast_delay_ms = 0; // Replace with actual value from enemy
+        let ability_name = "Unknown"; // Replace with actual value from enemy
 
         let mut current_cast_time = now_ms + first_cast_ms;
         let end_time = now_ms + five_minutes_ms;
@@ -367,7 +369,7 @@ impl Engine {
                         // Send text-to-speech
                     }
                     QueueAction::ToggleOffCooldown { guid, spell_id, .. } => {
-                        // use guid to search party and toggle the cooldown for the spell
+                        // Use guid to search party and toggle the cooldown for the spell
                     }
                 }
             } else {

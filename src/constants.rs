@@ -20,19 +20,19 @@ pub enum PlayerClass {
 impl PlayerClass {
     pub fn get_interrupt(&self) -> engine::Spell {
         match self {
-            Self::DeathKnight => engine::Spell::new(String::from("Mind Freeze"), 47528, 15000),
-            Self::DemonHunter => engine::Spell::new(String::from("Disrupt"), 183752, 15000),
-            Self::Druid => engine::Spell::new(String::from("Skull Bash"), 106839, 15000),
-            Self::Evoker => engine::Spell::new(String::from("Quell"), 351338, 20000),
-            Self::Hunter => engine::Spell::new(String::from("Muzzle"), 187707, 15000),
-            Self::Mage => engine::Spell::new(String::from("Counterspell"), 2139, 24000),
-            Self::Monk => engine::Spell::new(String::from("Spear Hand Strike"), 116705, 15000),
-            Self::Paladin => engine::Spell::new(String::from("Rebuke"), 96231, 15000),
-            Self::Priest => engine::Spell::new(String::from("Silence"), 15487, 45000),
-            Self::Rogue => engine::Spell::new(String::from("Kick"), 1766, 15000),
-            Self::Shaman => engine::Spell::new(String::from("Wind Shear"), 57994, 12000),
-            Self::Warlock => engine::Spell::new(String::from("Spell Lock"), 19647, 24000),
-            Self::Warrior => engine::Spell::new(String::from("Pummel"), 6552, 15000),
+            Self::DeathKnight => engine::Spell::Player { name: String::from("Mind Freeze"), spell_id: 47528, cooldown: 15000, is_on_cooldown: false },
+            Self::DemonHunter => engine::Spell::Player { name: String::from("Disrupt"), spell_id: 183752, cooldown: 15000, is_on_cooldown: false },
+            Self::Druid => engine::Spell::Player { name: String::from("Skull Bash"), spell_id: 106839, cooldown: 15000, is_on_cooldown: false },
+            Self::Evoker => engine::Spell::Player { name: String::from("Quell"), spell_id: 351338, cooldown: 20000, is_on_cooldown: false },
+            Self::Hunter => engine::Spell::Player { name: String::from("Muzzle"), spell_id: 187707, cooldown: 15000, is_on_cooldown: false },
+            Self::Mage => engine::Spell::Player { name: String::from("Counterspell"), spell_id: 2139, cooldown: 24000, is_on_cooldown: false },
+            Self::Monk => engine::Spell::Player { name: String::from("Spear Hand Strike"), spell_id: 116705, cooldown: 15000, is_on_cooldown: false },
+            Self::Paladin => engine::Spell::Player { name: String::from("Rebuke"), spell_id: 96231, cooldown: 15000, is_on_cooldown: false },
+            Self::Priest => engine::Spell::Player { name: String::from("Silence"), spell_id: 15487, cooldown: 45000, is_on_cooldown: false },
+            Self::Rogue => engine::Spell::Player { name: String::from("Kick"), spell_id: 1766, cooldown: 15000, is_on_cooldown: false },
+            Self::Shaman => engine::Spell::Player { name: String::from("Wind Shear"), spell_id: 57994, cooldown: 12000, is_on_cooldown: false },
+            Self::Warlock => engine::Spell::Player { name: String::from("Spell Lock"), spell_id: 19647, cooldown: 24000, is_on_cooldown: false },
+            Self::Warrior => engine::Spell::Player { name: String::from("Pummel"), spell_id: 6552, cooldown: 15000, is_on_cooldown: false },
         }
     }
 
@@ -40,86 +40,71 @@ impl PlayerClass {
         match self {
             Self::DeathKnight => {
                 vec![
-                    engine::Spell::new(String::from("Blinding Sleet"), 207127, 60000),
-                    engine::Spell::new(String::from("Gorefiend's Grasp"), 207167, 90000),
+                    engine::Spell::Player { name: String::from("Blinding Sleet"), spell_id: 207127, cooldown: 60000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Gorefiend's Grasp"), spell_id: 207167, cooldown: 90000, is_on_cooldown: false },
                 ]
             }
             Self::DemonHunter => {
-                vec![engine::Spell::new(
-                    String::from("Chaos Nova"),
-                    179057,
-                    60000,
-                )]
+                vec![engine::Spell::Player { name: 
+                    String::from("Chaos Nova"), spell_id: 179057, cooldown: 60000, is_on_cooldown: false }]
             }
             Self::Druid => {
                 vec![
-                    engine::Spell::new(String::from("Ursol's Vortex"), 102793, 60000),
-                    engine::Spell::new(String::from("Typhoon"), 132469, 30000),
+                    engine::Spell::Player { name: String::from("Ursol's Vortex"), spell_id: 102793, cooldown: 60000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Typhoon"), spell_id: 132469, cooldown: 30000, is_on_cooldown: false },
                 ]
             }
             Self::Evoker => {
-                vec![engine::Spell::new(
-                    String::from("Tail Swipe"),
-                    368725,
-                    90000,
-                )]
+                vec![engine::Spell::Player { name: 
+                    String::from("Tail Swipe"), spell_id: 368725, cooldown: 90000, is_on_cooldown: false }]
             }
             Self::Hunter => {
-                vec![engine::Spell::new(
-                    String::from("Binding Shot"),
-                    109248,
-                    45000,
-                )]
+                vec![engine::Spell::Player { name: 
+                    String::from("Binding Shot"), spell_id: 109248, cooldown: 45000, is_on_cooldown: false }]
             }
             Self::Mage => {
                 vec![
-                    engine::Spell::new(String::from("Frost Nova"), 122, 30000),
-                    engine::Spell::new(String::from("Dragon's Breath"), 31661, 45000),
-                    engine::Spell::new(String::from("Ring of Frost"), 113724, 45000),
-                    engine::Spell::new(String::from("Blast Wave"), 157981, 30000),
+                    engine::Spell::Player { name: String::from("Frost Nova"), spell_id: 122, cooldown: 30000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Dragon's Breath"), spell_id: 31661, cooldown: 45000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Ring of Frost"), spell_id: 113724, cooldown: 45000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Blast Wave"), spell_id: 157981, cooldown: 30000, is_on_cooldown: false },
                 ]
             }
             Self::Monk => {
                 vec![
-                    engine::Spell::new(String::from("Leg Sweep"), 119381, 60000),
-                    engine::Spell::new(String::from("Ring of Peace"), 116844, 60000),
+                    engine::Spell::Player { name: String::from("Leg Sweep"), spell_id: 119381, cooldown: 60000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Ring of Peace"), spell_id: 116844, cooldown: 60000, is_on_cooldown: false },
                 ]
             }
             Self::Paladin => {
-                vec![engine::Spell::new(
-                    String::from("Blinding Light"),
-                    105421,
-                    90000,
-                )]
+                vec![engine::Spell::Player { name: 
+                    String::from("Blinding Light"), spell_id: 105421, cooldown: 90000, is_on_cooldown: false }]
             }
             Self::Priest => {
-                vec![engine::Spell::new(
-                    String::from("Psychic Scream"),
-                    8122,
-                    60000,
-                )]
+                vec![engine::Spell::Player { name: 
+                    String::from("Psychic Scream"), spell_id: 8122, cooldown: 60000, is_on_cooldown: false }]
             }
             Self::Rogue => {
                 vec![]
             }
             Self::Shaman => {
                 vec![
-                    engine::Spell::new(String::from("Capacitor Totem"), 192058, 60000),
-                    engine::Spell::new(String::from("Earthgrab Totem"), 51485, 30000),
-                    engine::Spell::new(String::from("Thunderstorm"), 51490, 45000),
-                    engine::Spell::new(String::from("Sundering"), 197214, 40000),
+                    engine::Spell::Player { name: String::from("Capacitor Totem"), spell_id: 192058, cooldown: 60000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Earthgrab Totem"), spell_id: 51485, cooldown: 30000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Thunderstorm"), spell_id: 51490, cooldown: 45000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Sundering"), spell_id: 197214, cooldown: 40000, is_on_cooldown: false },
                 ]
             }
             Self::Warlock => {
                 vec![
-                    engine::Spell::new(String::from("Howl of Terror"), 5484, 45000),
-                    engine::Spell::new(String::from("Shadowfury"), 30283, 60000),
+                    engine::Spell::Player { name: String::from("Howl of Terror"), spell_id: 5484, cooldown: 45000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Shadowfury"), spell_id: 30283, cooldown: 60000, is_on_cooldown: false },
                 ]
             }
             Self::Warrior => {
                 vec![
-                    engine::Spell::new(String::from("Intimidating Shout"), 5246, 90000),
-                    engine::Spell::new(String::from("Shockwave"), 46968, 40000),
+                    engine::Spell::Player { name: String::from("Intimidating Shout"), spell_id: 5246, cooldown: 90000, is_on_cooldown: false },
+                    engine::Spell::Player { name: String::from("Shockwave"), spell_id: 46968, cooldown: 40000, is_on_cooldown: false },
                 ]
             }
         }
@@ -264,119 +249,85 @@ pub fn is_battle_rez(spell_id: i32) -> bool {
     battle_rez_arr.contains(&spell_id)
 }
 
-struct EnemySpellEntry {
-    enemy_id: u32,
-    spell_id: i32,
-    first_cast_ms: i64,
-    cooldown_ms: i64,
-    callout: &'static str,
-    is_interruptable: bool,
-    is_ccable: bool,
-}
 
-impl EnemySpellEntry {
-    pub const fn new(
-        enemy_id: u32,
-        spell_id: i32,
-        first_cast_ms: i64,
-        cooldown_ms: i64,
-        callout: &'static str,
-        is_interruptable: bool,
-        is_ccable: bool,
-    ) -> Self {
-        Self {
-            enemy_id,
-            spell_id,
-            first_cast_ms,
-            cooldown_ms,
-            callout,
-            is_interruptable,
-            is_ccable,
-        }
-    }
-}
-
-const ENEMY_DATA: [EnemySpellEntry; 54] = [
+const ENEMY_DATA: [engine::Spell; 54] = [
     // Eco-dome
-    EnemySpellEntry::new(245092, 1215850, 20000, 37000, "AoE", false, true),
-    EnemySpellEntry::new(234883, 1221152, 6500, 18200, "AoE", false, true),
-    EnemySpellEntry::new(242631, 1235368, 6900, 15800, "Tank Frontal", false, true),
-    EnemySpellEntry::new(236995, 1226111, 15000, 20600, "Ejection", false, true),
-    EnemySpellEntry::new(234957, 1221483, 15000, 20600, "Dispel", false, true),
-    EnemySpellEntry::new(234962, 1221679, 6000, 13300, "Leap", false, true),
+    engine::Spell::Enemy { enemy_id: 245092, spell_id: 1215850, first_cast_ms: 20000, cooldown_ms: 37000, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 234883, spell_id: 1221152, first_cast_ms: 6500, cooldown_ms: 18200, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 242631, spell_id: 1235368, first_cast_ms: 6900, cooldown_ms: 15800, callout: "Tank Frontal", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 236995, spell_id: 1226111, first_cast_ms: 15000, cooldown_ms: 20600, callout: "Ejection", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 234957, spell_id: 1221483, first_cast_ms: 15000, cooldown_ms: 20600, callout: "Dispel", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 234962, spell_id: 1221679, first_cast_ms: 6000, cooldown_ms: 13300, callout: "Leap", is_interruptable: false, is_ccable: true },
     // Tazavesh
-    EnemySpellEntry::new(180567, 357827, 5000, 17000, "Leap", false, true),
-    EnemySpellEntry::new(246285, 1240912, 14300, 23000, "Buster", false, true),
-    EnemySpellEntry::new(246285, 1240821, 8000, 23000, "Spread", false, true),
-    EnemySpellEntry::new(178165, 355429, 11300, 23000, "AOE", false, true),
-    EnemySpellEntry::new(178141, 355132, 9700, 27900, "Fish sticks", false, true),
-    EnemySpellEntry::new(180429, 357238, 13600, 26700, "Pulsar", false, true),
-    EnemySpellEntry::new(179386, 368661, 8300, 14500, "Toss", false, true),
-    EnemySpellEntry::new(177716, 351119, 8000, 18200, "Tee Pee", true, true),
-    EnemySpellEntry::new(177816, 355915, 7300, 17000, "Dispel", false, true),
-    EnemySpellEntry::new(180431, 357260, 13300, 21800, "Unstable Rift", true, true),
+    engine::Spell::Enemy { enemy_id: 180567, spell_id: 357827, first_cast_ms: 5000, cooldown_ms: 17000, callout: "Leap", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 246285, spell_id: 1240912, first_cast_ms: 14300, cooldown_ms: 23000, callout: "Buster", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 246285, spell_id: 1240821, first_cast_ms: 8000, cooldown_ms: 23000, callout: "Spread", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 178165, spell_id: 355429, first_cast_ms: 11300, cooldown_ms: 23000, callout: "AOE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 178141, spell_id: 355132, first_cast_ms: 9700, cooldown_ms: 27900, callout: "Fish sticks", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 180429, spell_id: 357238, first_cast_ms: 13600, cooldown_ms: 26700, callout: "Pulsar", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 179386, spell_id: 368661, first_cast_ms: 8300, cooldown_ms: 14500, callout: "Toss", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 177716, spell_id: 351119, first_cast_ms: 8000, cooldown_ms: 18200, callout: "Tee Pee", is_interruptable: true, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 177816, spell_id: 355915, first_cast_ms: 7300, cooldown_ms: 17000, callout: "Dispel", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 180431, spell_id: 357260, first_cast_ms: 13300, cooldown_ms: 21800, callout: "Unstable Rift", is_interruptable: true, is_ccable: true },
     // Halls of Atonement
-    EnemySpellEntry::new(164557, 326409, 8900, 23000, "AOE", false, true),
-    EnemySpellEntry::new(167607, 1235326, 15900, 32800, "Stop casting", false, true),
-    EnemySpellEntry::new(164562, 326450, 15300, 24200, "Loyal Beast", true, true),
-    EnemySpellEntry::new(165414, 325876, 9700, 24200, "Dispel", false, true),
+    engine::Spell::Enemy { enemy_id: 164557, spell_id: 326409, first_cast_ms: 8900, cooldown_ms: 23000, callout: "AOE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 167607, spell_id: 1235326, first_cast_ms: 15900, cooldown_ms: 32800, callout: "Stop casting", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 164562, spell_id: 326450, first_cast_ms: 15300, cooldown_ms: 24200, callout: "Loyal Beast", is_interruptable: true, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 165414, spell_id: 325876, first_cast_ms: 9700, cooldown_ms: 24200, callout: "Dispel", is_interruptable: false, is_ccable: true },
     // Floodgate
-    EnemySpellEntry::new(230748, 465827, 6800, 19400, "Warp blood", false, true),
-    EnemySpellEntry::new(
-        231014,
-        465120,
-        8300,
-        17000,
-        "Loaderbots spinning",
-        false,
-        true,
-    ),
+    engine::Spell::Enemy { enemy_id: 230748, spell_id: 465827, first_cast_ms: 6800, cooldown_ms: 19400, callout: "Warp blood", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 
+        231014, spell_id: 465120, first_cast_ms: 8300, cooldown_ms: 17000, callout: "Loaderbots spinning", is_interruptable: false, is_ccable: true,
+     },
     // Dawnbreaker
-    EnemySpellEntry::new(214761, 432448, 8300, 23000, "Seed", false, true),
-    EnemySpellEntry::new(214761, 431364, 3300, 10900, "Ray", false, true),
-    EnemySpellEntry::new(210966, 451107, 4900, 20600, "Cocoon", false, true),
-    EnemySpellEntry::new(228540, 431309, 12400, 23000, "Curse", false, true),
-    EnemySpellEntry::new(213892, 431309, 12400, 23000, "Curse", false, true),
-    EnemySpellEntry::new(211261, 451102, 14300, 27800, "Aoe", false, true),
-    EnemySpellEntry::new(211261, 451119, 8300, 12100, "Dot", false, true),
-    EnemySpellEntry::new(211262, 451119, 3900, 12100, "Dot", false, true),
-    EnemySpellEntry::new(211263, 451119, 4900, 12100, "Dot", false, true),
-    EnemySpellEntry::new(211263, 450854, 12100, 24300, "Orb", false, true),
+    engine::Spell::Enemy { enemy_id: 214761, spell_id: 432448, first_cast_ms: 8300, cooldown_ms: 23000, callout: "Seed", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 214761, spell_id: 431364, first_cast_ms: 3300, cooldown_ms: 10900, callout: "Ray", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 210966, spell_id: 451107, first_cast_ms: 4900, cooldown_ms: 20600, callout: "Cocoon", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 228540, spell_id: 431309, first_cast_ms: 12400, cooldown_ms: 23000, callout: "Curse", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 213892, spell_id: 431309, first_cast_ms: 12400, cooldown_ms: 23000, callout: "Curse", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 211261, spell_id: 451102, first_cast_ms: 14300, cooldown_ms: 27800, callout: "Aoe", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 211261, spell_id: 451119, first_cast_ms: 8300, cooldown_ms: 12100, callout: "Dot", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 211262, spell_id: 451119, first_cast_ms: 3900, cooldown_ms: 12100, callout: "Dot", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 211263, spell_id: 451119, first_cast_ms: 4900, cooldown_ms: 12100, callout: "Dot", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 211263, spell_id: 450854, first_cast_ms: 12100, cooldown_ms: 24300, callout: "Orb", is_interruptable: false, is_ccable: true },
     // Ara-kara
-    EnemySpellEntry::new(216293, 434793, 4000, 16900, "AoE Barrage", true, true),
-    EnemySpellEntry::new(217531, 434802, 9600, 20800, "Fear", true, true),
-    EnemySpellEntry::new(218324, 438877, 12100, 21900, "AoE", false, true),
-    EnemySpellEntry::new(216338, 1241693, 6000, 30300, "AoE", false, true),
-    EnemySpellEntry::new(223253, 448248, 4800, 20600, "Volley", true, true),
-    EnemySpellEntry::new(216364, 433841, 5800, 19000, "Volley", true, true),
+    engine::Spell::Enemy { enemy_id: 216293, spell_id: 434793, first_cast_ms: 4000, cooldown_ms: 16900, callout: "AoE Barrage", is_interruptable: true, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 217531, spell_id: 434802, first_cast_ms: 9600, cooldown_ms: 20800, callout: "Fear", is_interruptable: true, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 218324, spell_id: 438877, first_cast_ms: 12100, cooldown_ms: 21900, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 216338, spell_id: 1241693, first_cast_ms: 6000, cooldown_ms: 30300, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 223253, spell_id: 448248, first_cast_ms: 4800, cooldown_ms: 20600, callout: "Volley", is_interruptable: true, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 216364, spell_id: 433841, first_cast_ms: 5800, cooldown_ms: 19000, callout: "Volley", is_interruptable: true, is_ccable: true },
     // Priory of the Sacred Flame
-    EnemySpellEntry::new(206696, 427609, 20400, 23000, "Stop casting", false, true),
-    EnemySpellEntry::new(206696, 427621, 3800, 15700, "Impale bleed", false, true),
-    EnemySpellEntry::new(221760, 444743, 9500, 24300, "Volley", true, true),
-    EnemySpellEntry::new(212826, 448485, 5900, 12100, "Tank Buster", false, true),
-    EnemySpellEntry::new(212826, 448492, 14700, 15700, "AoE", false, true),
-    EnemySpellEntry::new(212831, 427897, 10800, 18200, "AoE", false, true),
-    EnemySpellEntry::new(239833, 424431, 26100, 37600, "AoE", false, true),
-    EnemySpellEntry::new(206704, 448791, 15500, 21700, "AoE", false, true),
-    EnemySpellEntry::new(206699, 446776, 7000, 15800, "Leap bleed", false, true),
+    engine::Spell::Enemy { enemy_id: 206696, spell_id: 427609, first_cast_ms: 20400, cooldown_ms: 23000, callout: "Stop casting", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 206696, spell_id: 427621, first_cast_ms: 3800, cooldown_ms: 15700, callout: "Impale bleed", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 221760, spell_id: 444743, first_cast_ms: 9500, cooldown_ms: 24300, callout: "Volley", is_interruptable: true, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 212826, spell_id: 448485, first_cast_ms: 5900, cooldown_ms: 12100, callout: "Tank Buster", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 212826, spell_id: 448492, first_cast_ms: 14700, cooldown_ms: 15700, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 212831, spell_id: 427897, first_cast_ms: 10800, cooldown_ms: 18200, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 239833, spell_id: 424431, first_cast_ms: 26100, cooldown_ms: 37600, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 206704, spell_id: 448791, first_cast_ms: 15500, cooldown_ms: 21700, callout: "AoE", is_interruptable: false, is_ccable: true },
+    engine::Spell::Enemy { enemy_id: 206699, spell_id: 446776, first_cast_ms: 7000, cooldown_ms: 15800, callout: "Leap bleed", is_interruptable: false, is_ccable: true },
     // Cinderbrew Meadery
-    EnemySpellEntry::new(214697, 463206, 8100, 18100, "Knock", true, true), // Tenderize
-    EnemySpellEntry::new(210269, 463218, 8500, 24200, "DoT", true, true),   // Volatile Keg
-    EnemySpellEntry::new(223423, 448619, 9100, 30300, "Charge", true, true), // Reckless Delivery
-    EnemySpellEntry::new(220946, 442995, 10300, 23000, "AoE", true, true),  // Swarming Surprise
-    EnemySpellEntry::new(222964, 441434, 8700, 23000, "Batch", false, true), // Failed Batch
-    EnemySpellEntry::new(220141, 440687, 5900, 25400, "Volley", true, true), // Honey Volley
-    EnemySpellEntry::new(218671, 437956, 10500, 18200, "Dispel", true, true), // Erupting Inferno
+    engine::Spell::Enemy { enemy_id: 214697, spell_id: 463206, first_cast_ms: 8100, cooldown_ms: 18100, callout: "Knock", is_interruptable: true, is_ccable: true }, // Tenderize
+    engine::Spell::Enemy { enemy_id: 210269, spell_id: 463218, first_cast_ms: 8500, cooldown_ms: 24200, callout: "DoT", is_interruptable: true, is_ccable: true },   // Volatile Keg
+    engine::Spell::Enemy { enemy_id: 223423, spell_id: 448619, first_cast_ms: 9100, cooldown_ms: 30300, callout: "Charge", is_interruptable: true, is_ccable: true }, // Reckless Delivery
+    engine::Spell::Enemy { enemy_id: 220946, spell_id: 442995, first_cast_ms: 10300, cooldown_ms: 23000, callout: "AoE", is_interruptable: true, is_ccable: true },  // Swarming Surprise
+    engine::Spell::Enemy { enemy_id: 222964, spell_id: 441434, first_cast_ms: 8700, cooldown_ms: 23000, callout: "Batch", is_interruptable: false, is_ccable: true }, // Failed Batch
+    engine::Spell::Enemy { enemy_id: 220141, spell_id: 440687, first_cast_ms: 5900, cooldown_ms: 25400, callout: "Volley", is_interruptable: true, is_ccable: true }, // Honey Volley
+    engine::Spell::Enemy { enemy_id: 218671, spell_id: 437956, first_cast_ms: 10500, cooldown_ms: 18200, callout: "Dispel", is_interruptable: true, is_ccable: true }, // Erupting Inferno
 ];
 
 pub fn is_tracked_enemy(enemy_id: u32) -> bool {
-    ENEMY_DATA.iter().any(|entry| entry.enemy_id == enemy_id)
+    ENEMY_DATA.iter().any(|entry| matches!(entry, engine::Spell::Enemy { enemy_id: id, .. } if *id == enemy_id))
 }
 
 pub fn is_enemy_ccable(enemy_id: u32) -> bool {
     ENEMY_DATA
         .iter()
-        .find(|entry| entry.enemy_id == enemy_id)
-        .map(|entry| entry.is_ccable)
+        .find(|entry| matches!(entry, engine::Spell::Enemy { enemy_id: id, .. } if *id == enemy_id))
+        .map(|entry| match entry {
+            engine::Spell::Enemy { is_ccable, .. } => *is_ccable,
+            _ => false,
+        })
         .unwrap_or(false)
 }

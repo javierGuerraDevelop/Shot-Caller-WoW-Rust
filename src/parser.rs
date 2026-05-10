@@ -22,7 +22,7 @@ pub enum Event {
     Other {
         timestamp_ms: u64,
         source_guid: String,
-        target_guid: String,
+        source_name: String,
         spell_id: i32,
     },
 }
@@ -63,11 +63,11 @@ pub fn parse_line(line: &str) -> Option<Event> {
     }
 
     let source_guid = parts.next().filter(|s| !s.is_empty())?;
-    let _source_name = parts.next().filter(|s| !s.is_empty())?;
+    let source_name = parts.next().filter(|s| !s.is_empty())?;
     let _source_flags = parts.next()?;
     let _source_raid_flag = parts.next().filter(|s| !s.is_empty())?;
     let target_guid = parts.next().filter(|s| !s.is_empty())?;
-    let _target_name = parts.next()?;
+    let target_name = parts.next()?;
     let _target_flags = parts.next()?;
     let _target_raid_flags = parts.next()?;
 
@@ -99,7 +99,7 @@ pub fn parse_line(line: &str) -> Option<Event> {
         Some(Event::Other {
             timestamp_ms,
             source_guid: source_guid.to_string(),
-            target_guid: target_guid.to_string(),
+            source_name: source_name.to_string(),
             spell_id,
         })
     }
